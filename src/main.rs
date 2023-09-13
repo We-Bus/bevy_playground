@@ -1,6 +1,7 @@
 use bevy::{math::Vec3Swizzles, prelude::*};
 
 const TIME_STEP: f32 = 1.0 / 60.0;
+const TILE_SIZE: f32 = 32.0;
 
 fn main() {
     App::new()
@@ -19,7 +20,7 @@ fn main() {
             }),
         ))
         .insert_resource(FixedTime::new_from_secs(TIME_STEP))
-        .add_systems(Startup, setup)
+        .add_systems(Startup,setup)
         .add_systems(
             FixedUpdate,
             (
@@ -38,8 +39,12 @@ struct Player {
     movement_speed: f32,
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>, 
+) {
     let player_texture = asset_server.load("player_idle.png");
+    
     let default_tile_texture = asset_server.load("tiles/plaintile.png");
 
     // 2D orthographic camera
@@ -55,13 +60,29 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
     ));
 
-    // tile
-    commands.spawn((
-        SpriteBundle {
-            texture: default_tile_texture,
-            ..default()
-        },
-    ));
+    let player_x: f32 = 0.;
+    let player_y: f32 = 0.;
+    
+    // now loop over a 9 by 9 grid to place tile
+    for x in -1..=1 {
+        for y in -1..=1 {
+            let tile_x = x as f32 * TILE_SIZE;
+            let tile_y = y as f32 * TILE_SIZE;
+
+            let tile_position = Vec3::new(tile_x + ((x * 5) as f32), tile_y + ((y * 5) as f32), 0.0);
+            commands.spawn((
+                SpriteBundle {
+                    texture: default_tile_texture.clone(),
+                    transform: Transform::from_translation(tile_position),
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(32.0, 32.0)),
+                        ..default()
+                    },
+                    ..default()
+                },
+            ));
+        }
+    }
 }
 
 fn player_movement_system(
@@ -126,26 +147,4 @@ fn move_camera_system(
         direction.x = delta;
         *translation += direction * 100.0 * TIME_STEP; // Adjust the speed by multiplying with a time step
     }
-
-
-    //println!("{}",player_x)
-
-    // // Use the arrow keys to move the camera along the x and y axes
-    // let mut direction = Vec3::ZERO;
-    // if keyboard_input.pressed(KeyCode::Left) {
-    //     direction.x -= 1.0;
-    // }
-    // if keyboard_input.pressed(KeyCode::Right) {
-    //     direction.x += 1.0;
-    // }
-    // if keyboard_input.pressed(KeyCode::Up) {
-    //     direction.y += 1.0;
-    // }
-    // if keyboard_input.pressed(KeyCode::Down) {
-    //     direction.y -= 1.0;
-    // }
-
-    // let translation = &mut transform.translation;
-    // *translation += direction * 100.0 * TIME_STEP; // Adjust the speed by multiplying with a time step
 }
-
