@@ -1,6 +1,12 @@
+#![allow(unused)] // remove this when releasing / optemising
+
 use bevy::{math::Vec3Swizzles, prelude::*};
 
 const TIME_STEP: f32 = 1.0 / 60.0;
+
+const SCREEN_WIDTH: f32 = 800.;
+const SCREEN_HEIGHT: f32 = 600.;
+
 const TILE_SIZE: f32 = 32.0;
 
 fn main() {
@@ -9,7 +15,7 @@ fn main() {
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Insert Game Name".into(),
-                    resolution: (800., 600.).into(),
+                    resolution: (SCREEN_WIDTH, SCREEN_HEIGHT).into(),
                     // Tells wasm to resize the window according to the available canvas
                     fit_canvas_to_parent: true,
                     // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
@@ -20,12 +26,17 @@ fn main() {
             }),
         ))
         .insert_resource(FixedTime::new_from_secs(TIME_STEP))
-        .add_systems(Startup,setup)
+        .add_systems(Startup,(
+                setup,
+                intialize_tiles_and_tracker.after(setup),
+            )
+        )
         .add_systems(
             FixedUpdate,
             (
                 player_movement_system,
                 move_camera_system,
+                tile_update_system,
             ),
         )
         .add_systems(Update, bevy::window::close_on_esc)
@@ -39,14 +50,17 @@ struct Player {
     movement_speed: f32,
 }
 
+#[derive(Component)]
+struct ScreenTileTracker {
+    current_x: i32,
+    current_y: i32
+}
+
 fn setup(
     mut commands: Commands, 
     asset_server: Res<AssetServer>, 
 ) {
     let player_texture = asset_server.load("player_idle.png");
-    
-    let default_tile_texture = asset_server.load("tiles/plaintile.png");
-
     // 2D orthographic camera
     commands.spawn(Camera2dBundle::default());
 
@@ -59,30 +73,6 @@ fn setup(
             movement_speed: 500.0,// meters per second
         },
     ));
-
-    let player_x: f32 = 0.;
-    let player_y: f32 = 0.;
-    
-    // now loop over a 9 by 9 grid to place tile
-    for x in -1..=1 {
-        for y in -1..=1 {
-            let tile_x = x as f32 * TILE_SIZE;
-            let tile_y = y as f32 * TILE_SIZE;
-
-            let tile_position = Vec3::new(tile_x + ((x * 5) as f32), tile_y + ((y * 5) as f32), 0.0);
-            commands.spawn((
-                SpriteBundle {
-                    texture: default_tile_texture.clone(),
-                    transform: Transform::from_translation(tile_position),
-                    sprite: Sprite {
-                        custom_size: Some(Vec2::new(32.0, 32.0)),
-                        ..default()
-                    },
-                    ..default()
-                },
-            ));
-        }
-    }
 }
 
 fn player_movement_system(
@@ -120,31 +110,64 @@ fn move_camera_system(
     mut camera_query: Query<(&Camera2d, &mut Transform),Without<Player>>,
     player_query: Query<(&Player,&Transform)>,
 ) {
-    let (_, mut transform) = camera_query.single_mut();
+    let (_,mut transform) = camera_query.single_mut();
     let (_,player_transform) = player_query.single();
 
-    let player_x = player_transform.translation.x;
-    let player_y = player_transform.translation.y;
+    transform.translation = player_transform.translation; 
+}
 
-    let camera_x = transform.translation.x;
-    let camera_y = transform.translation.y;
+struct ScreenTile {
+    x: i32,
+    y: i32,
+}
 
-    let max_camera_bounds = camera_x + (800./2.) - 50.;
-    let min_camera_bounds = camera_x - (800./2.) + 50.;
-    
-    let translation = &mut transform.translation;
+struct Chunk { // 16 x 16 
 
-    let mut direction = Vec3::ZERO;
-    
-    if (player_x > max_camera_bounds) {
-        let delta = player_x - max_camera_bounds;
-        direction.x = delta;
-        *translation += direction * 100.0 * TIME_STEP; // Adjust the speed by multiplying with a time step
-    }
+}
 
-    if (player_x < min_camera_bounds) {
-        let delta = player_x - min_camera_bounds;
-        direction.x = delta;
-        *translation += direction * 100.0 * TIME_STEP; // Adjust the speed by multiplying with a time step
-    }
+fn intialize_tiles_and_tracker(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>
+) {
+
+    commands.spawn((
+        ScreenTileTracker {
+            current_x:0,
+            current_y:0,
+        }
+    ));
+}
+
+fn tile_update_system(
+    camera_query : Query<&Transform,With<Camera2d>>,
+    mut query_tile_tracker: Query<&mut ScreenTileTracker>,
+    mut commands : Commands,
+) {
+    let camera_transform = camera_query.single();
+    let tile_tracker = query_tile_tracker.single();
+
+    let camera_x = camera_transform.translation.x;
+    let camera_y = camera_transform.translation.y;
+
+    let x_tile_index = (camera_x / TILE_SIZE).floor() as i32;
+    let y_tile_index = (camera_y / TILE_SIZE).floor() as i32;    
+}
+
+fn get_tiles_from_position(x_position:i32,y_position:i32) -> [ScreenTile;9]
+{
+    let screen_tiles: [ScreenTile;9] = [
+        ScreenTile{x:x_position-1,  y:y_position+1}, // tile top left
+        ScreenTile{x:x_position,    y:y_position+1}, // tile top middel
+        ScreenTile{x:x_position+1,  y:y_position+1}, // tile top right
+
+        ScreenTile{x:x_position-1,  y:y_position},   // tile side left
+        ScreenTile{x:x_position,    y:y_position},   // tile currently standing on
+        ScreenTile{x:x_position+1,  y:y_position},   // tile side right
+
+        ScreenTile{x:x_position-1,  y:y_position-1}, // tile bottom left
+        ScreenTile{x:x_position,    y:y_position-1}, // tile bottom middel
+        ScreenTile{x:x_position+1,  y:y_position-1}, // tile bototm right
+    ];
+
+    return screen_tiles;
 }

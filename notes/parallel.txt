@@ -1,0 +1,42 @@
+We want to make sure that as many systems run in parallel as possible.
+
+Systems we need and what they need:
+
+player_movement:
+    keyboard
+    mut transform With<Player>
+
+camera_movement:
+    mut transfrom with<Camera2d>, Without<Player>
+    transform with<Player>
+
+player_attack:
+    transfrom with<Player>
+    transform with<Enemy>
+    mut commands
+
+player_projectiles:
+    mut transform with<Enemy>
+
+enemy_spawner:
+    mut commands
+
+enemy_movement:
+    mut transform with<Enemy>, Wihtout<Player>
+
+enemy_collision:
+    transform with<Player>
+    transform with<Enemy>
+
+tile_renderer:
+    mut commands
+    transform with<Camera2d>
+
+--------- should run last
+
+player_health_check:
+    Player
+
+enemy_health_check:
+    Enemy
+

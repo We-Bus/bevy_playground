@@ -1,0 +1,9 @@
+Step_1:
+
+Create a chunk system that knows when the player has moved chunks.
+Chunks should have a width and lenght that should be a multiple of TILE_SiZE
+println to say when we moved to a different chunk
+
+Step_2:
+
+Fill in chunks with sprites and store them in a array so we can delete them later.
