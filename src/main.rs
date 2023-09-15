@@ -7,7 +7,13 @@ const TIME_STEP: f32 = 1.0 / 60.0;
 const SCREEN_WIDTH: f32 = 800.;
 const SCREEN_HEIGHT: f32 = 600.;
 
-const TILE_SIZE: f32 = 32.0;
+const TILE_SIZE: i32 = 32;
+
+const CHUNK_TILE_SCALE_WIDTH: i32 = 10;
+const CHUNK_TILE_SCALE_HEIGHT: i32 = 10;
+
+const CHUNK_WIDTH: i32 = TILE_SIZE * CHUNK_TILE_SCALE_WIDTH;
+const CHUNK_HEIGHT: i32 = TILE_SIZE * CHUNK_TILE_SCALE_HEIGHT;
 
 fn main() {
     App::new()
@@ -51,18 +57,64 @@ struct Player {
 }
 
 #[derive(Component)]
-struct ScreenTileTracker {
-    current_x: i32,
-    current_y: i32
+struct ChunkTracker {
+    current_chunk_x: i32,
+    current_chunk_y: i32
+}
+
+#[derive(Component)]
+struct ChunkRenderer {
+    loaded_sprites: Vec<Entity>,
+    is_loaded: bool
 }
 
 fn setup(
     mut commands: Commands, 
     asset_server: Res<AssetServer>, 
 ) {
-    let player_texture = asset_server.load("player_idle.png");
+    let mut initial_tiles: Vec<Entity> = Vec::new();
+
+    for i in 0..CHUNK_TILE_SCALE_WIDTH {
+        for j in 0..CHUNK_TILE_SCALE_HEIGHT {
+            let default_tile_texture = asset_server.load("tiles/plaintile.png");
+
+            let tile_x = i * TILE_SIZE;
+            let tile_y = j * TILE_SIZE;
+
+            let tile_position = IVec3::new(tile_x, tile_y, 0);
+            
+            let tile_id = commands.spawn((
+                SpriteBundle {
+                    texture: default_tile_texture,
+                    transform: Transform::from_translation(tile_position.as_vec3()),
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(32.0, 32.0)),
+                        ..default()
+                    },
+                    ..default()
+                },
+            )).id();
+
+            initial_tiles.push(tile_id);
+        }
+    }
+
     // 2D orthographic camera
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn((
+        Camera2dBundle {
+            ..default()
+        },
+        ChunkTracker {
+            current_chunk_x : 0,
+            current_chunk_y : 0,
+        },
+        ChunkRenderer {
+            is_loaded: false,
+            loaded_sprites: initial_tiles
+        }
+    ));
+
+    let player_texture = asset_server.load("player_idle.png");
 
     commands.spawn((
         SpriteBundle {
@@ -116,58 +168,39 @@ fn move_camera_system(
     transform.translation = player_transform.translation; 
 }
 
-struct ScreenTile {
-    x: i32,
-    y: i32,
-}
-
-struct Chunk { // 16 x 16 
-
-}
-
 fn intialize_tiles_and_tracker(
     mut commands: Commands,
     asset_server: Res<AssetServer>
 ) {
 
-    commands.spawn((
-        ScreenTileTracker {
-            current_x:0,
-            current_y:0,
-        }
-    ));
 }
 
 fn tile_update_system(
-    camera_query : Query<&Transform,With<Camera2d>>,
-    mut query_tile_tracker: Query<&mut ScreenTileTracker>,
+    mut chunk_query : Query<(&mut ChunkTracker, &mut ChunkRenderer, &Transform)>,
     mut commands : Commands,
 ) {
-    let camera_transform = camera_query.single();
-    let tile_tracker = query_tile_tracker.single();
+    let (mut chunk_tracker,chunk_renderer,transform) = chunk_query.single_mut();
+    let translation = transform.translation;
+    
+    let check_chunk_position = position_to_chunk(translation.x, translation.y);
 
-    let camera_x = camera_transform.translation.x;
-    let camera_y = camera_transform.translation.y;
+    if (check_chunk_position.x != chunk_tracker.current_chunk_x) {
+        println!("In the X, we moved from {} , to {} ",chunk_tracker.current_chunk_x,check_chunk_position.x);
+        chunk_tracker.current_chunk_x = check_chunk_position.x;
 
-    let x_tile_index = (camera_x / TILE_SIZE).floor() as i32;
-    let y_tile_index = (camera_y / TILE_SIZE).floor() as i32;    
+        for e in chunk_renderer.loaded_sprites.iter() {
+            commands.entity(*e).despawn();
+        }
+    }
+
+    if (check_chunk_position.y != chunk_tracker.current_chunk_y) {
+        println!("In the Y, we moved from {} , to {} ",chunk_tracker.current_chunk_y,check_chunk_position.y);
+        chunk_tracker.current_chunk_y = check_chunk_position.y;
+    }
 }
 
-fn get_tiles_from_position(x_position:i32,y_position:i32) -> [ScreenTile;9]
-{
-    let screen_tiles: [ScreenTile;9] = [
-        ScreenTile{x:x_position-1,  y:y_position+1}, // tile top left
-        ScreenTile{x:x_position,    y:y_position+1}, // tile top middel
-        ScreenTile{x:x_position+1,  y:y_position+1}, // tile top right
-
-        ScreenTile{x:x_position-1,  y:y_position},   // tile side left
-        ScreenTile{x:x_position,    y:y_position},   // tile currently standing on
-        ScreenTile{x:x_position+1,  y:y_position},   // tile side right
-
-        ScreenTile{x:x_position-1,  y:y_position-1}, // tile bottom left
-        ScreenTile{x:x_position,    y:y_position-1}, // tile bottom middel
-        ScreenTile{x:x_position+1,  y:y_position-1}, // tile bototm right
-    ];
-
-    return screen_tiles;
+fn position_to_chunk(x_position:f32,y_position:f32) -> IVec2 {
+    let chunk_x = (x_position as i32) / CHUNK_WIDTH;
+    let chunk_y = (y_position as i32) / CHUNK_HEIGHT;
+    IVec2::new(chunk_x, chunk_y)
 }
