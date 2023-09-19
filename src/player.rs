@@ -32,9 +32,33 @@ pub fn spawn_player(
 }
 
 pub fn player_movement(
-
+    keyboard_input: Res<Input<KeyCode>>,
+    mut query: Query<(&Player, &mut Transform)>,
 ) {
+    let (player, mut transform) = query.single_mut();
 
+    let mut player_input : Vec3 = Vec3::ZERO;
+
+    if keyboard_input.pressed(KeyCode::W) {
+        player_input.y += 1.0;
+    }
+    if keyboard_input.pressed(KeyCode::S) {
+        player_input.y += -1.0;
+    }
+    if keyboard_input.pressed(KeyCode::A) {
+        player_input.x += -1.0;
+    }
+    if keyboard_input.pressed(KeyCode::D) {
+        player_input.x += 1.0;
+    }
+
+    if (player_input.length_squared() > 0.001) {
+        player_input = player_input.normalize();
+    }
+
+    let movement_distance = player.movement_speed * TIME_STEP;
+    let translation_delta = player_input * movement_distance;
+    transform.translation += translation_delta;
 }
 
 pub fn player_attack(

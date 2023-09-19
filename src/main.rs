@@ -23,6 +23,7 @@ fn main() {
         .add_plugins((
             PlayerPlugin,
             BackgroundPlugin,
+            CameraPlugin,
         ))
         .insert_resource(FixedTime::new_from_secs(TIME_STEP))
         .add_systems(Startup,(

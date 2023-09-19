@@ -26,11 +26,11 @@ fn setup(
 
 fn update_camera(
     mut commands: Commands,
-    mut camera_query: Query<(&mut Transform,With<Camera2d>)>,
-    player_query: Query<(&Transform,With<Player>)>,
+    mut camera_query: Query<&mut Transform,(With<Camera2d>,Without<Player>)>,
+    player_query: Query<&Transform,(With<Player>,Without<Camera2d>)>,
 ) {
-    let (mut camera_transform,_) = camera_query.single_mut();
-    let (player_transform,_) = player_query.single();
+    let mut camera_transform = camera_query.single_mut();
+    let player_transform = player_query.single();
 
     camera_transform.translation.x = player_transform.translation.x;
     camera_transform.translation.y = player_transform.translation.y;
