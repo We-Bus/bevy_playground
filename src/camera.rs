@@ -18,7 +18,7 @@ fn setup(
     // 2D orthographic camera
     commands.spawn((
         Camera2dBundle {
-            transform: Transform::from_translation(Vec3::new(SCREEN_WIDTH as f32 * 0.5, SCREEN_HEIGHT as f32 * 0.5, 0.0)),
+            transform: Transform::from_translation(Vec3::new(0., 0., 0.0)),
             ..default()
         },
     ));
