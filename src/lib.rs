@@ -4,8 +4,8 @@ mod camera;
 
 pub mod prelude {
     pub const TIME_STEP: f32 = 1.0 / 60.0;
-    pub const SCREEN_WIDTH: f32 = 800.;
-    pub const SCREEN_HEIGHT: f32 = 600.;
+    pub const SCREEN_WIDTH: f32 = 1800.;
+    pub const SCREEN_HEIGHT: f32 = 900.;
     pub const TILE_SIZE: i32 = 32;
     pub const CHUNK_TILE_COUNT_WIDTH: i32 = 10;
     pub const CHUNK_TILE_COUNT_HEIGHT: i32 = 10;

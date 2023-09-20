@@ -10,7 +10,7 @@ fn main() {
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Insert Game Name".into(),
-                    resolution: (800., 600.).into(),
+                    resolution: (SCREEN_WIDTH, SCREEN_HEIGHT).into(),
                     // Tells wasm to resize the window according to the available canvas
                     fit_canvas_to_parent: true,
                     // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
