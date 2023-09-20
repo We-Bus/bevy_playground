@@ -60,7 +60,7 @@ pub fn update_background(
     for mut bg_transfrom in background_query.iter_mut() {
         let translation = bg_transfrom.translation;
 
-        if (camera_transform.translation.x < (bg_transfrom.translation.x - BACKGROUND_SPRITE_WIDTH * 1.5)) {
+        if (camera_transform.translation.x < (bg_transfrom.translation.x - BACKGROUND_SPRITE_WIDTH * 1.5)) { // * 1.5 for a threshold
             let new_x= translation.x - (BACKGROUND_SPRITE_WIDTH * 3.); // 3 here is the number of tiles in 1 row or colum
             bg_transfrom.translation.x = new_x;
             foo += 1;
