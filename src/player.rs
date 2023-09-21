@@ -22,7 +22,7 @@ pub fn spawn_player(
     commands.spawn((
         SpriteBundle {
             texture: player_texture,
-            transform: Transform::from_translation(Vec3::new(0., 0., 0.0,)),
+            transform: Transform::from_translation(Vec3::new(0., 0., 2.0,)),
             ..default()
         },
         Player {

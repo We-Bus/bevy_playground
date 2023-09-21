@@ -3,7 +3,6 @@
 use bevy_playground::prelude::*;
 
 const TIME_STEP: f32 = 1.0 / 60.0;
-
 fn main() {
     App::new()
         .add_plugins((
