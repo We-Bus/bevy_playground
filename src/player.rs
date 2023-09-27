@@ -26,7 +26,9 @@ pub fn spawn_player(
             ..default()
         },
         Player {
-            movement_speed: 500.0,// meters per second
+            movement_speed: 500.0,
+            health: 100,
+            max_health: 100,
         },
     ));
 }
@@ -52,7 +54,7 @@ pub fn player_movement(
         player_input.x += 1.0;
     }
 
-    if (player_input.length_squared() > 0.001) {
+    if player_input.length_squared() > 0.001 {
         player_input = player_input.normalize();
     }
 

@@ -50,35 +50,29 @@ pub fn update_background(
     let camera_transform = camera_query.single();
     let current_chunk = position_to_chunk(camera_transform.translation.x, camera_transform.translation.y);
     
-    if (chunk_tracker.latest_chunk.x == current_chunk.x && chunk_tracker.latest_chunk.y == current_chunk.y) {
+    if chunk_tracker.latest_chunk.x == current_chunk.x && chunk_tracker.latest_chunk.y == current_chunk.y {
         return;
     }
-
-    let mut foo = 0;
 
     for mut bg_transfrom in background_query.iter_mut() {
         let translation = bg_transfrom.translation;
 
-        if (camera_transform.translation.x < (bg_transfrom.translation.x - BACKGROUND_SPRITE_WIDTH * 1.5)) { // *   1.5 for a threshold
+        if camera_transform.translation.x < (bg_transfrom.translation.x - BACKGROUND_SPRITE_WIDTH * 1.5) { // *   1.5 for a threshold
             let new_x= translation.x - (BACKGROUND_SPRITE_WIDTH * 3.); // 3 here is the number of tiles in 1 row or colum
             bg_transfrom.translation.x = new_x;
-            foo += 1;
         }
-        else if (camera_transform.translation.x > (bg_transfrom.translation.x + BACKGROUND_SPRITE_WIDTH * 1.5)) {
+        else if camera_transform.translation.x > (bg_transfrom.translation.x + BACKGROUND_SPRITE_WIDTH * 1.5) {
             let new_x = translation.x + (BACKGROUND_SPRITE_WIDTH * 3.);
             bg_transfrom.translation.x = new_x;
-            foo += 1;
         }
 
-        if (camera_transform.translation.y < (bg_transfrom.translation.y - BACKGROUND_SPRITE_HEIGHT * 1.5)) {
+        if camera_transform.translation.y < (bg_transfrom.translation.y - BACKGROUND_SPRITE_HEIGHT * 1.5) {
             let new_y = translation.y - (BACKGROUND_SPRITE_HEIGHT * 3.);
             bg_transfrom.translation.y = new_y;
-            foo += 1;
         }
-        else if (camera_transform.translation.y > (bg_transfrom.translation.y + BACKGROUND_SPRITE_HEIGHT * 1.5)) {
+        else if camera_transform.translation.y > (bg_transfrom.translation.y + BACKGROUND_SPRITE_HEIGHT * 1.5) {
             let new_y = translation.y + (BACKGROUND_SPRITE_HEIGHT * 3.);
             bg_transfrom.translation.y = new_y;
-            foo += 1;
         }
     }
 

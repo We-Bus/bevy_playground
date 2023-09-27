@@ -1,6 +1,7 @@
 #![allow(unused)] // remove this when releasing / optemising
 
 use bevy_playground::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 fn main() {
@@ -19,14 +20,21 @@ fn main() {
                 ..default()
             }),            
         ))
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugins(RapierDebugRenderPlugin::default())
+        .insert_resource(RapierConfiguration {
+            gravity: Vec2::ZERO,
+            ..Default::default()
+        })
         .add_plugins((
             PlayerPlugin,
             BackgroundPlugin,
             CameraPlugin,
+            EnemyPlugin,
         ))
         .insert_resource(FixedTime::new_from_secs(TIME_STEP))
         .add_systems(Startup,(
-                setup
+                setup,
             )
         )
         .add_systems(Update, bevy::window::close_on_esc)
@@ -37,4 +45,4 @@ fn setup(
     mut commands: Commands,
 ) {
 
-} 
+}
