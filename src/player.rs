@@ -7,7 +7,7 @@ impl Plugin for PlayerPlugin {
         app.add_systems(Startup, spawn_player)
         .add_systems(Update, (
                 player_movement,
-                player_attack
+                player_attack,
             )
         );
     }
@@ -27,9 +27,16 @@ pub fn spawn_player(
         },
         Player {
             movement_speed: 500.0,
-            health: 100,
-            max_health: 100,
+            health: 100.,
+            max_health: 100.,
         },
+        Collider::capsule(
+            Vec2::new(-8.,10.),
+            Vec2::new(-8.,-20.), 
+            32.,
+        ),
+        RigidBody::KinematicVelocityBased,
+        Sensor,
     ));
 }
 

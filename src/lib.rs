@@ -27,8 +27,8 @@ pub mod prelude {
     #[derive(Component)]
     pub struct Player {
         pub movement_speed: f32,
-        pub health: i32,
-        pub max_health: i32,
+        pub health: f32,
+        pub max_health: f32,
     }
 
     #[derive(Component)]
@@ -45,9 +45,9 @@ pub mod prelude {
     #[derive(Component)]
     pub struct Enemy {
         pub movement_speed: f32,
-        pub health: i32,
-        pub max_health: i32,
-        pub attack_damage: i32,
+        pub health: f32,
+        pub max_health: f32,
+        pub attack_damage: f32,
         pub level: i32,
     }
 
