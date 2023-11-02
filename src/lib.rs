@@ -2,6 +2,7 @@ mod player;
 mod background;
 mod camera;
 mod enemy;
+mod projectile;
 
 pub mod prelude {
     pub const TIME_STEP: f32 = 1.0 / 60.0;
@@ -16,6 +17,7 @@ pub mod prelude {
     pub use crate::background::BackgroundPlugin;
     pub use crate::camera::CameraPlugin;
     pub use crate::enemy::EnemyPlugin;
+    pub use crate::projectile::ProjectilePlugin;
     pub use bevy::prelude::*;
     pub use bevy_rapier2d::prelude::*;
     pub use rand::prelude::*;
@@ -56,5 +58,19 @@ pub mod prelude {
         pub spawn_countdown: f32,
         pub spawn_after_time: f32,
         pub max_enemy_count: i32,
+    }
+
+    #[derive(Component)]
+    pub struct Projectile {
+        pub velocity: Vec2,
+    }
+
+    #[derive(Component)]
+    pub struct WeaponInventory {
+        pub weapons: [Weapon; 4],
+    }
+
+    pub struct Weapon {
+        
     }
 }  

@@ -31,6 +31,7 @@ fn main() {
             BackgroundPlugin,
             CameraPlugin,
             EnemyPlugin,
+            ProjectilePlugin,
         ))
         .insert_resource(FixedTime::new_from_secs(TIME_STEP))
         .add_systems(Startup,(
