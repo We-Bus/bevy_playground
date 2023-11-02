@@ -7,7 +7,9 @@ impl Plugin for EnemyPlugin {
         app.add_systems(Startup, init_enemy_spawner)
         .add_systems(Update, (
                 update_enemy_spawner,
-                enemy_movement,
+                enemy_movement_physics,
+                display_events,
+                get_collisions
             )
         );
     }
@@ -64,48 +66,53 @@ fn update_enemy_spawner(
             spawn_position.x = player_transform.translation.x + (rng.gen::<f32>() * SCREEN_WIDTH) - SCREEN_WIDTH_HALF;
             spawn_position.y = player_transform.translation.y + (y_side * SCREEN_HEIGHT_HALF) + (32. * y_side);
         }
-
         commands.spawn((
             SpriteBundle {
                 texture: enemy_texture,
                 transform: Transform::from_translation(spawn_position),
+                sprite: Sprite { 
+                    anchor: bevy::sprite::Anchor::Center,
+                    ..default()
+                },
                 ..default()
             },
             Enemy {
                 movement_speed: 400.0,
-                health: 100,
-                max_health: 100,
-                attack_damage: 10,
+                health: 100.,
+                max_health: 100.,
+                attack_damage: 10.,
                 level: 1,
             },
             RigidBody::Dynamic,
-        ))
-            .insert(Collider::capsule(
+            Collider::capsule(
                 Vec2::new(-8.,10.),
                 Vec2::new(-8.,-20.), 
                 32.,
-            ))
-            .insert(Restitution::coefficient(0.0))
-            .insert(LockedAxes::ROTATION_LOCKED);
+            ),
+            Restitution::coefficient(0.0),
+            LockedAxes::ROTATION_LOCKED,
+            Velocity {
+                linvel: Vec2::ZERO,
+                angvel: 0.
+            },
+            ActiveEvents::COLLISION_EVENTS,
+        ));
 
         enemy_spawner.spawn_countdown = enemy_spawner.spawn_after_time;
         println!("Enemy spawned!");
     } 
 }
 
-// base it on velocity of enemy and not transform
-fn enemy_movement(
-    mut enemy_query: Query<(&mut Transform,&mut Enemy),Without<Player>>,
-    player_query: Query<&Transform,(With<Player>,Without<Enemy>)>,
+fn enemy_movement_physics(
+    mut enemy_query: Query<(&mut Velocity,&Transform),(With<Enemy>,Without<Player>)>,    player_query: Query<&Transform,(With<Player>,Without<Enemy>)>
 ) {
     let player_transform = player_query.single();
+    
+    for enemy_velocity in enemy_query.iter_mut() {
+        
+        let (mut velocity,enemy_transform) = enemy_velocity;
 
-    for enemy in enemy_query.iter_mut(){
-        let (mut enemy_transform, mut enemy) = enemy;
-
-        // Let the enemy move towards the player with the movement speed of the enemy
-
-        let mut enemy_movement : Vec3 = Vec3::ZERO;
+        let mut enemy_movement : Vec2 = Vec2::ZERO;
 
         enemy_movement.x = player_transform.translation.x - enemy_transform.translation.x;
         enemy_movement.y = player_transform.translation.y - enemy_transform.translation.y;
@@ -113,10 +120,56 @@ fn enemy_movement(
         if enemy_movement.length_squared() > 0.001 {
             enemy_movement = enemy_movement.normalize();
         }
-
-        let movement_distance = enemy.movement_speed * TIME_STEP;
-        let translation_delta = enemy_movement * movement_distance;
-        enemy_transform.translation += translation_delta;
         
+        enemy_movement = enemy_movement * (20000. * TIME_STEP);
+        
+        velocity.linvel = enemy_movement;
+    }
+}
+
+/* A system that displays the events. */
+fn display_events(
+    enemy_query: Query<&Enemy>,
+    player_query: Query<&Player>,
+    mut collision_events: EventReader<CollisionEvent>,
+) {
+    for collision_event in collision_events.iter() {
+        match collision_event {
+            CollisionEvent::Started(e1, e2, flags) => {
+            },
+            CollisionEvent::Stopped(e1, e2, flags) => {
+
+                // if e1.index() == player.index() || e2.index() == player.index() {
+                //     println!("Collision with player stopped");
+                // }
+            }
+        }
+    }
+}
+
+fn get_collisions(
+    rapier_context: Res<RapierContext>,
+    mut player_col_query: Query<(Entity,&mut Player),Without<Enemy>>,
+    enemy_col_query: Query<(Entity,&Enemy),Without<Player>>
+) {
+    let (player_entity,mut player) = player_col_query.single_mut();
+
+    for (enemy_entity,enemy) in enemy_col_query.iter() {
+        let result = rapier_context.intersection_pair(enemy_entity, player_entity);
+        
+        match result {
+            None => { /* collision not found */ },
+            Some(r) => {
+                if (r == false) { 
+                    println!("Intreseting"); // intersetction was there but no collision ?
+                    return; 
+                }
+                
+                // collision found
+                player.health -= enemy.attack_damage * TIME_STEP;
+                println!("{}",player.health); // intersetction was there but no collision ?
+
+            }
+        }
     }
 }
