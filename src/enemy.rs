@@ -8,10 +8,10 @@ impl Plugin for EnemyPlugin {
         .add_systems(Update, (
                 update_enemy_spawner,
                 enemy_movement_physics,
-                display_events,
                 get_collisions
             )
-        );
+        )
+        .add_systems(PostUpdate, check_health);
     }
 }
 
@@ -31,6 +31,7 @@ fn update_enemy_spawner(
     mut enemy_spawner_query: Query<&mut EnemySpawner>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    time: Res<Time>,
     enemies_query: Query<&Enemy>,
     player_query: Query<&Transform,(With<Player>,Without<Enemy>)>,
 ) {
@@ -44,7 +45,7 @@ fn update_enemy_spawner(
         return;
     }
 
-    enemy_spawner.spawn_countdown -= TIME_STEP;
+    enemy_spawner.spawn_countdown -= time.delta_seconds();
 
     if enemy_spawner.spawn_countdown <= 0. {
         let enemy_texture = asset_server.load("zombie_idle.png");
@@ -104,7 +105,9 @@ fn update_enemy_spawner(
 }
 
 fn enemy_movement_physics(
-    mut enemy_query: Query<(&mut Velocity,&Transform),(With<Enemy>,Without<Player>)>,    player_query: Query<&Transform,(With<Player>,Without<Enemy>)>
+    mut enemy_query: Query<(&mut Velocity,&Transform),(With<Enemy>,Without<Player>)>,    
+    player_query: Query<&Transform,(With<Player>,Without<Enemy>)>,
+    time:Res<Time>,
 ) {
     let player_transform = player_query.single();
     
@@ -121,36 +124,18 @@ fn enemy_movement_physics(
             enemy_movement = enemy_movement.normalize();
         }
         
-        enemy_movement = enemy_movement * (20000. * TIME_STEP);
+        enemy_movement = enemy_movement * (20000. * time.delta_seconds());
         
         velocity.linvel = enemy_movement;
     }
 }
 
-/* A system that displays the events. */
-fn display_events(
-    enemy_query: Query<&Enemy>,
-    player_query: Query<&Player>,
-    mut collision_events: EventReader<CollisionEvent>,
-) {
-    for collision_event in collision_events.iter() {
-        match collision_event {
-            CollisionEvent::Started(e1, e2, flags) => {
-            },
-            CollisionEvent::Stopped(e1, e2, flags) => {
-
-                // if e1.index() == player.index() || e2.index() == player.index() {
-                //     println!("Collision with player stopped");
-                // }
-            }
-        }
-    }
-}
 
 fn get_collisions(
     rapier_context: Res<RapierContext>,
     mut player_col_query: Query<(Entity,&mut Player),Without<Enemy>>,
-    enemy_col_query: Query<(Entity,&Enemy),Without<Player>>
+    enemy_col_query: Query<(Entity,&Enemy),Without<Player>>,
+    time: Res<Time>
 ) {
     let (player_entity,mut player) = player_col_query.single_mut();
 
@@ -161,15 +146,19 @@ fn get_collisions(
             None => { /* collision not found */ },
             Some(r) => {
                 if (r == false) { 
-                    println!("Intreseting"); // intersetction was there but no collision ?
                     return; 
                 }
                 
                 // collision found
-                player.health -= enemy.attack_damage * TIME_STEP;
+                player.health -= enemy.attack_damage * time.delta_seconds();
                 println!("{}",player.health); // intersetction was there but no collision ?
 
             }
         }
     }
+}
+
+fn check_health () 
+{
+
 }

@@ -5,7 +5,7 @@ mod enemy;
 mod projectile;
 
 pub mod prelude {
-    pub const TIME_STEP: f32 = 1.0 / 60.0;
+
     pub const SCREEN_WIDTH: f32 = 1600.;
     pub const SCREEN_HEIGHT: f32 = 720.;
     pub const SCREEN_WIDTH_HALF: f32 = SCREEN_WIDTH * 0.5;
@@ -21,6 +21,7 @@ pub mod prelude {
     pub use bevy::prelude::*;
     pub use bevy_rapier2d::prelude::*;
     pub use rand::prelude::*;
+    pub use std::collections::HashMap;
 
     #[derive(Resource)]
     pub struct Random {
@@ -31,6 +32,8 @@ pub mod prelude {
         pub movement_speed: f32,
         pub health: f32,
         pub max_health: f32,
+        pub attack_cooldown: f32,
+        pub attack_timer: f32,
     }
 
     #[derive(Component)]
@@ -62,15 +65,11 @@ pub mod prelude {
 
     #[derive(Component)]
     pub struct Projectile {
-        pub velocity: Vec2,
-    }
-
-    #[derive(Component)]
-    pub struct WeaponInventory {
-        pub weapons: [Weapon; 4],
-    }
-
-    pub struct Weapon {
-        
+        pub just_fired: bool,
+        pub velocity: Vec3,
+        pub enemies_hit_cooldown: HashMap<u32,f32>,
+        pub hits_before_delete: i32,
+        pub lifetime: f32,
+        pub damage: f32,
     }
 }  
