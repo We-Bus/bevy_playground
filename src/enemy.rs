@@ -152,7 +152,7 @@ fn get_collisions(
         match result {
             None => { /* collision not found */ },
             Some(r) => {
-                if (r == false) { 
+                if r == false { 
                     return; 
                 }
                 
@@ -170,13 +170,13 @@ fn check_health (
     asset_server: Res<AssetServer>,
 ) 
 {
-    let mut deathCount = 0;
+    let mut death_count = 0;
 
     for (entity,enemy) in enemy_query.iter() 
     {
-        if (enemy.health <= 0.) {
+        if enemy.health <= 0. {
             commands.entity(entity).despawn();
-            deathCount += 1;
+            death_count += 1;
             commands.spawn(
                 AudioBundle {
                     source: asset_server.load("sounds/death_sound.ogg"),
@@ -192,12 +192,12 @@ fn check_health (
         }
     }
 
-    if (deathCount > 0) {
+    if death_count > 0 {
         let (mut player,mut level) = player_query.single_mut();
         
-        level.experience += 2. * deathCount as f32;
+        level.experience += 2. * death_count as f32;
 
-        while (level.experience >= level.experience_to_next_level){
+        while level.experience >= level.experience_to_next_level {
             level.level += 1;
             level.experience = level.experience - level.experience_to_next_level;
             level.experience_to_next_level += 2.;

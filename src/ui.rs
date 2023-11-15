@@ -1,13 +1,11 @@
-use bevy::ecs::query;
-
 use crate::prelude::*;  
 
 pub struct InGameUIPlugin;
 
 impl Plugin for InGameUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (spawn_player_ui))
-        .add_systems(Update, (update_player_healthbar));
+        app.add_systems(Startup, spawn_player_ui)
+        .add_systems(Update, update_player_healthbar);
     }
 }
 

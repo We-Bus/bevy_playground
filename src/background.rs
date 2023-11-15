@@ -100,7 +100,7 @@ pub fn intiialize_ordaments(
     let ordament_sprit_handle: Handle<Image> = asset_server.load("flower.png");
     let mut rng = rand::thread_rng();
 
-    for i in 0..ordament_count {
+    for _ in 0..ordament_count {
         let random_x:f32 = (rng.gen::<f32>() * (SCREEN_WIDTH + 32.) as f32) - SCREEN_WIDTH * 0.5;
         let random_y:f32 = (rng.gen::<f32>() * (SCREEN_HEIGHT + 32.) as f32) - SCREEN_HEIGHT * 0.5;
 

@@ -8,8 +8,6 @@ impl Plugin for PlayerPlugin {
         .add_systems(Update, (
                 player_movement,
                 player_attack,
-                example_system_one,
-                example_system_two,
             )
         );
     }
@@ -95,31 +93,31 @@ pub fn player_attack(
 
     player.attack_timer -= time.delta_seconds();
 
-    if (player.attack_timer > 0.) {
+    if player.attack_timer > 0. {
         // attack is on cooldown
         return;
     }
     player.attack_timer = 0.; // making sure it stays at 0
 
     // If we have no enemies, wait with shooting
-    if (enemy_query.iter().count() < 1) {
+    if enemy_query.iter().count() < 1 {
         return;
     }
     
-    let mut closestEnemyPosition: Vec3 = Vec3 { x: f32::MAX, y: f32::MAX, z:f32::MAX };
-    let mut closestEnemyLength = f32::MAX;
+    let mut closest_enemy_position: Vec3 = Vec3 { x: f32::MAX, y: f32::MAX, z:f32::MAX };
+    let mut closest_enemy_length = f32::MAX;
 
     // search closed enemy transform
     for enemy_transfrom in enemy_query.iter() {
         let distance = enemy_transfrom.translation.distance(player_transfrom.translation);
 
-        if (distance < closestEnemyLength) {
-            closestEnemyPosition = enemy_transfrom.translation;
-            closestEnemyLength = distance;
+        if distance < closest_enemy_length {
+            closest_enemy_position = enemy_transfrom.translation;
+            closest_enemy_length = distance;
         }
     }
 
-    let delta = (closestEnemyPosition - player_transfrom.translation).normalize();
+    let delta = (closest_enemy_position - player_transfrom.translation).normalize();
     let projectile_velocity = delta * 300.;
 
     let projectile_texture = asset_server.load("projectile.png");
@@ -162,11 +160,5 @@ pub fn player_attack(
             ..default()
         }
     ));
-
-
     player.attack_timer = player.attack_cooldown;
 }
-
-fn example_system_one(mut player_query: Query<(&mut Player)>){ /*do something with player*/ }
-
-fn example_system_two(mut player_query: Query<(&mut Player)>){ /*do something with player*/ }

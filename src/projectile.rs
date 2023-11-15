@@ -31,7 +31,7 @@ pub fn check_collision (
     for (projectile_entity,mut projectile) in projectile_col_query.iter_mut() {
         for (enemy_entity,mut enemy) in enemy_col_query.iter_mut() {
 
-            if (projectile.enemies_hit_cooldown.contains_key(&enemy_entity.index())) {
+            if projectile.enemies_hit_cooldown.contains_key(&enemy_entity.index()) {
                 continue; // This has already been hit by this projectile within the cooldown
             }
 
@@ -40,7 +40,7 @@ pub fn check_collision (
             match result {
                 None => { /* collision not found */ },
                 Some(r) => {
-                    if (r == false) { 
+                    if r == false { 
                         return; 
                     }
                     enemy.health -= projectile.damage;
@@ -60,7 +60,7 @@ pub fn check_collision (
                         }
                     );
                     
-                    if (projectile.hits_before_delete <= 0.01) {
+                    if projectile.hits_before_delete <= 0.01 {
                         projectile.lifetime = 0.;
                     }
                     
@@ -78,7 +78,7 @@ pub fn update_lifetime(
     for (entity,mut projectile) in projectile_query.iter_mut(){
         projectile.lifetime -= time.delta_seconds();
 
-        if (projectile.lifetime > 0. || projectile.minimum_alive_frames > 0) {
+        if projectile.lifetime > 0. || projectile.minimum_alive_frames > 0 {
             continue;
         }
         commands.entity(entity).despawn();

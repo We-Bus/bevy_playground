@@ -1,7 +1,4 @@
-#![allow(unused)] // remove this when releasing / optemising
-
 use bevy_playground::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 fn main() {
     App::new()
@@ -34,15 +31,10 @@ fn main() {
             ProjectilePlugin,
             InGameUIPlugin,
         ))
-        .add_systems(Startup,(setup,start_audio)
+        .add_systems(Startup,start_audio
         )
         .add_systems(Update, bevy::window::close_on_esc)
         .run();
-}
-
-fn setup(
-    mut commands: Commands,
-) {
 }
 
 fn start_audio(
