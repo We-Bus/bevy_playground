@@ -26,7 +26,6 @@ fn setup(
 }
 
 fn update_camera(
-    mut commands: Commands,
     mut camera_query: Query<&mut Transform,(With<Camera2d>,Without<Player>)>,
     player_query: Query<&Transform,(With<Player>,Without<Camera2d>)>,
 ) {

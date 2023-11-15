@@ -7,7 +7,9 @@ impl Plugin for PlayerPlugin {
         app.add_systems(Startup, spawn_player)
         .add_systems(Update, (
                 player_movement,
-                player_attack
+                player_attack,
+                example_system_one,
+                example_system_two,
             )
         );
     }
@@ -26,12 +28,28 @@ pub fn spawn_player(
             ..default()
         },
         Player {
-            movement_speed: 500.0,
+            base_movement_speed: 250.0,
+            movement_speed: 250.0,
             health: 100.,
             max_health: 100.,
-            attack_cooldown: 1.,
-            attack_timer: 5.
+            base_attack_cooldown: 1.5,
+            attack_cooldown: 1.5,
+            attack_timer: 1.
         },
+        Level {
+            experience:0.,
+            experience_to_next_level: 5.,
+            level: 1
+        },
+        RigidBody::KinematicPositionBased,
+        Collider::capsule(
+            Vec2::new(-2.5,5.),
+            Vec2::new(-2.5,-25.), 
+            32.,
+        ),
+        Restitution::coefficient(0.0),
+        LockedAxes::ROTATION_LOCKED,
+        Sensor,
     ));
 }
 
@@ -69,11 +87,11 @@ pub fn player_movement(
 pub fn player_attack(
     time:Res<Time>,
     enemy_query: Query<&Transform,(With<Enemy>,Without<Player>)>,
-    mut player_query: Query<(&mut Player,&Transform)>,
+    mut player_query: Query<(&mut Player,&Transform,&Level)>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ){
-    let (mut player,player_transfrom) = player_query.single_mut();
+    let (mut player,player_transfrom,level) = player_query.single_mut();
 
     player.attack_timer -= time.delta_seconds();
 
@@ -102,7 +120,7 @@ pub fn player_attack(
     }
 
     let delta = (closestEnemyPosition - player_transfrom.translation).normalize();
-    let projectile_velocity = delta * 100.;
+    let projectile_velocity = delta * 300.;
 
     let projectile_texture = asset_server.load("projectile.png");
 
@@ -111,7 +129,7 @@ pub fn player_attack(
 
     commands.spawn((
         SpriteBundle {
-            texture: projectile_texture,
+            texture: projectile_texture.clone(),
             transform: projectile_transfrom,
             ..default()
         },
@@ -119,9 +137,10 @@ pub fn player_attack(
             just_fired : true,
             velocity : projectile_velocity,
             enemies_hit_cooldown : HashMap::new(),
-            lifetime: 2.,
-            hits_before_delete: 1,
-            damage: 10.
+            lifetime: 20.,
+            hits_before_delete: (level.level as f32 * 0.25),
+            damage: 25. + level.level as f32 * 4.,
+            minimum_alive_frames: 4,
         },
         RigidBody::KinematicPositionBased,
         Collider::capsule(
@@ -132,7 +151,22 @@ pub fn player_attack(
         Restitution::coefficient(0.0),
         LockedAxes::ROTATION_LOCKED,
         Sensor,
+        AudioBundle {
+            source: asset_server.load("sounds/shoot_sound.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Once,
+                paused: false,
+                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.5)),
+                ..default()
+            },
+            ..default()
+        }
     ));
+
 
     player.attack_timer = player.attack_cooldown;
 }
+
+fn example_system_one(mut player_query: Query<(&mut Player)>){ /*do something with player*/ }
+
+fn example_system_two(mut player_query: Query<(&mut Player)>){ /*do something with player*/ }

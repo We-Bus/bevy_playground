@@ -3,7 +3,6 @@
 use bevy_playground::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-
 fn main() {
     App::new()
         .add_plugins((
@@ -21,21 +20,21 @@ fn main() {
             }),            
         ))
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugins(RapierDebugRenderPlugin::default())
+        //.add_plugins(RapierDebugRenderPlugin::default())
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..Default::default()
         })
+        .insert_resource(GlobalVolume::new(0.25))
         .add_plugins((
             PlayerPlugin,
             BackgroundPlugin,
             CameraPlugin,
             EnemyPlugin,
             ProjectilePlugin,
+            InGameUIPlugin,
         ))
-        .add_systems(Startup,(
-                setup,
-            )
+        .add_systems(Startup,(setup,start_audio)
         )
         .add_systems(Update, bevy::window::close_on_esc)
         .run();
@@ -44,5 +43,23 @@ fn main() {
 fn setup(
     mut commands: Commands,
 ) {
+}
 
+fn start_audio(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>) 
+    {
+    commands.spawn((
+        AudioBundle {
+            source: asset_server.load("sounds/background_music.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                paused: false,
+                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.15)),
+                ..default()
+            },
+            ..default()
+        },
+        BackgroundMusic,
+    ));
 }
