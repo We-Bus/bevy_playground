@@ -8,6 +8,7 @@ impl Plugin for PlayerPlugin {
         .add_systems(Update, (
                 player_movement,
                 player_attack,
+                check_player_health,
             )
         );
     }
@@ -30,8 +31,8 @@ pub fn spawn_player(
             movement_speed: 250.0,
             health: 100.,
             max_health: 100.,
-            base_attack_cooldown: 1.5,
-            attack_cooldown: 1.5,
+            base_attack_cooldown: 0.8,
+            attack_cooldown: 0.8,
             attack_timer: 1.
         },
         Level {
@@ -161,4 +162,15 @@ pub fn player_attack(
         }
     ));
     player.attack_timer = player.attack_cooldown;
+}
+
+fn check_player_health(
+    player_query: Query<&Player>,
+    mut app_exit_events: ResMut<Events<bevy::app::AppExit>>
+){
+    let player = player_query.single();
+
+    if player.health <= 0.0 {
+        app_exit_events.send(bevy::app::AppExit);
+    }
 }
